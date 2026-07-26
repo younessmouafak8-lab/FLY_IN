@@ -118,9 +118,13 @@ class Parse:
                 self.verify_metadata(hub, i)}
 
     def validate_connection(self, connection):
-        con = {"zone1": connection[0], "zone2": connection[1].strip()}
+        con = {"zone1": connection[0], "zone2": connection[1]}
         if connection[2]:
-            con.update({"max_link_capacity": int(connection[2])})
+            num = int(connection[2])
+            if num <= 0:
+                raise ValueError("max_link_capacity must be a "
+                                 "positive integer.")
+            con.update({"max_link_capacity": num})
         return con
 
     def validate_start_end(self, start, end):
@@ -159,7 +163,10 @@ class Parse:
                 if self.is_skippable(line):
                     continue
 
-                elif line.startswith("nb_drones") and not n_drones:
+                elif line.startswith("nb_drones"):
+                    if n_drones:
+                        raise ValueError(f"line {i}: duplicated "
+                                         "number of drones fild")
                     n_drones = self.drones_num(row)
                     n_drones = int(n_drones)
                     if n_drones <= 0:
@@ -170,7 +177,9 @@ class Parse:
                     raise ValueError(f"line {i}: The first line must "
                                      "define the number of drones")
 
-                elif line.startswith("start_hub") and not start_hub:
+                elif line.startswith("start_hub"):
+                    if start_hub:
+                        raise ValueError(f"line {i}: duplicate start zones")
                     start_hub = self.get_start(row)
                     if start_hub[0] in valid_hubs:
                         raise ValueError(f"line {i}: duplicate zone names "
@@ -178,6 +187,7 @@ class Parse:
                     start_hub = self.validate_hub(start_hub, i)
                     valid_hubs.add(start_hub["name"])
                     values.update({"start_zone": start_hub})
+
                 elif line.startswith("hub"):
                     hub = self.get_hubs(row)
                     if hub[0] in valid_hubs:
@@ -185,7 +195,10 @@ class Parse:
                                          f"are not tolerated '{hub[0]}'")
                     hubs.append(self.validate_hub(hub, i))
                     valid_hubs.add(hub[0])
-                elif line.startswith("end_hub") and not end_hub:
+
+                elif line.startswith("end_hub"):
+                    if end_hub:
+                        raise ValueError(f"line {i}: duplicated end zones")
                     end_hub = self.get_end(row)
                     if end_hub[0] in valid_hubs:
                         raise ValueError(f"line {i}: duplicate zone names "
@@ -193,9 +206,10 @@ class Parse:
                     end_hub = self.validate_hub(end_hub, i)
                     valid_hubs.add(end_hub["name"])
                     values.update({"end_zone": end_hub})
+
                 elif line.startswith("connection"):
                     connection = self.get_connection(row)
-                    name1, name2 = connection[0].strip(), connection[1].strip()
+                    name1, name2 = connection[0], connection[1]
                     if name1 == name2:
                         raise ValueError(f"line {i}: a hub cannot connect "
                                          f"to itself '{name1}'")
@@ -203,7 +217,6 @@ class Parse:
                         raise ValueError(f"line {i}: unknown hub '{name1}' "
                                          "in connection field")
                     if name2 not in valid_hubs:
-                        print(connection)
                         raise ValueError(f"line {i}: unknown hub '{name2}' "
                                          "in connection field")
                     if tuple(sorted((name1, name2))) in valid_connections:
