@@ -1,5 +1,5 @@
 from parsing import Parse
-from structure import Graph, Zone, Connection
+from structure import Graph
 
 
 def main():
