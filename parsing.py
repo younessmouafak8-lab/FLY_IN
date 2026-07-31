@@ -1,5 +1,6 @@
 import sys
 import re
+from structure import Zone, Connection
 
 
 class Parse:
@@ -22,7 +23,7 @@ class Parse:
     def get_start(self, line):
         i, text = line
         pattern = (r"start_hub: ([^\-]+)\s+([\-\+]?\d+)\s+([\-\+]?\d+)"
-                   r"(?:\s+\[(\w+=\w+)(?:\s+(\w+=.*))?(?:\s+(\w+=.*))?\])?"
+                   r"(?:\s+\[(\w+=\w+)(?:\s+(\w+=\w+))?(?:\s+(\w+=\w+))?\])?"
                    r"(?:\s*#.*)?$")
         result = re.match(pattern, text)
         if not result:
@@ -32,7 +33,7 @@ class Parse:
     def get_hubs(self, line):
         i, text = line
         pattern = (r"hub: ([^\-]+)\s+([\-\+]?\d+)\s+([\-\+]?\d+)"
-                   r"(?:\s+\[(\w+=.*)(?:\s+(\w+=.*))?(?:\s+(\w+=.*))?\])?"
+                   r"(?:\s+\[(\w+=\w+)(?:\s+(\w+=\w+))?(?:\s+(\w+=\w+))?\])?"
                    r"(?:\s*#.*)?$")
         result = re.match(pattern, text)
         if not result:
@@ -42,7 +43,7 @@ class Parse:
     def get_end(self, line):
         i, text = line
         pattern = (r"end_hub: ([^\-]+)\s+([\-\+]?\d+)\s+([\-\+]?\d+)"
-                   r"(?:\s+\[(\w+=.*)(?:\s+(\w+=.*))?(?:\s+(\w+=.*))?\])?"
+                   r"(?:\s+\[(\w+=\w+)(?:\s+(\w+=\w+))?(?:\s+(\w+=\w+))?\])?"
                    r"(?:\s*#.*)?$")
         result = re.match(pattern, text)
         if not result:
@@ -78,7 +79,7 @@ class Parse:
         allowed_names = ("color", "max_drones", "zone")
         allowed_zones = ("normal", "blocked", "restricted", "priority")
         temp = set()
-        data = {}
+        data = {"type": "normal", "max_drones": 1, "color": "white"}
         for name in hub[3:]:
             if name:
                 name = name.split("=")
@@ -94,7 +95,7 @@ class Parse:
                     if value not in allowed_zones:
                         raise ValueError(f"line {i}: invalid zone type "
                                          f"{key}:{value}")
-                    data.update({key: value})
+                    data.update({"type": value})
                 if key == "max_drones":
                     try:
                         value = int(value)
@@ -103,7 +104,7 @@ class Parse:
                         data.update({key: value})
                     except ValueError:
                         raise ValueError(f"line {i}: value for max_drones must"
-                                         " be a positive integer.")
+                                         f" be a positive integer. {value}")
                 if key == "color":
                     if not isinstance(value, str):
                         raise ValueError(f"line {i}: color must be a string")
@@ -111,33 +112,31 @@ class Parse:
         return data
 
     def validate_hub(self, hub, i):
-        return {"name": hub[0],
-                "x": int(hub[1]),
-                "y": int(hub[2]),
-                "metadata":
-                self.verify_metadata(hub, i)}
+        values = {"name": hub[0],
+                  "coordinates": (int(hub[1]), int(hub[2]))}
+        values.update(self.verify_metadata(hub, i))
+        return Zone(**values)
 
-    def validate_connection(self, connection):
-        con = {"zone1": connection[0], "zone2": connection[1]}
+    def validate_connection(self, connection, hubs, i):
+        con = {"zone1": hubs[connection[0]], "zone2": hubs[connection[1]]}
+        val = {"max_link_capacity": 1}
         if connection[2]:
             num = int(connection[2])
             if num <= 0:
-                raise ValueError("max_link_capacity must be a "
+                raise ValueError(f"line {i}: max_link_capacity must be a "
                                  "positive integer.")
-            con.update({"max_link_capacity": num})
-        return con
+            val["max_link_capacity"] = num
+        con.update(val)
+        return Connection(**con)
 
     def validate_start_end(self, start, end):
-        if ((start["x"], start["y"]) == (end["x"],
-                                         end["y"])):
+        if (start.coordinates == end.coordinates):
             raise ValueError("start and end zones have "
                              "the same coordinates")
-        if "zone" in start["metadata"]:
-            if start["metadata"]["zone"] == 'blocked':
-                raise ValueError("start zone cant be blocked")
-        if "zone" in end["metadata"]:
-            if end["metadata"]["zone"] == 'blocked':
-                raise ValueError("end zone cant be blocked")
+        if start.type == 'blocked':
+            raise ValueError("start zone cant be blocked")
+        if end.type == 'blocked':
+            raise ValueError("end zone cant be blocked")
 
     def parse_file(self):
         if len(sys.argv) != 2:
@@ -151,7 +150,7 @@ class Parse:
         values = {}
         n_drones = None
         start_hub = None
-        hubs = []
+        hubs = {}
         end_hub = None
         connections = []
         valid_hubs = set()
@@ -185,15 +184,16 @@ class Parse:
                         raise ValueError(f"line {i}: duplicate zone names "
                                          f"are not tolerated '{start_hub[0]}'")
                     start_hub = self.validate_hub(start_hub, i)
-                    valid_hubs.add(start_hub["name"])
+                    valid_hubs.add(start_hub.name)
                     values.update({"start_zone": start_hub})
+                    hubs.update({start_hub.name: start_hub})
 
                 elif line.startswith("hub"):
                     hub = self.get_hubs(row)
                     if hub[0] in valid_hubs:
                         raise ValueError(f"line {i}: duplicate zone names "
                                          f"are not tolerated '{hub[0]}'")
-                    hubs.append(self.validate_hub(hub, i))
+                    hubs.update({hub[0]: self.validate_hub(hub, i)})
                     valid_hubs.add(hub[0])
 
                 elif line.startswith("end_hub"):
@@ -204,8 +204,9 @@ class Parse:
                         raise ValueError(f"line {i}: duplicate zone names "
                                          f"are not tolerated '{end_hub[0]}'")
                     end_hub = self.validate_hub(end_hub, i)
-                    valid_hubs.add(end_hub["name"])
+                    valid_hubs.add(end_hub.name)
                     values.update({"end_zone": end_hub})
+                    hubs.update({end_hub.name: end_hub})
 
                 elif line.startswith("connection"):
                     connection = self.get_connection(row)
@@ -221,7 +222,8 @@ class Parse:
                                          "in connection field")
                     if tuple(sorted((name1, name2))) in valid_connections:
                         raise ValueError(f"line {i}: duplicate connections!")
-                    connections.append(self.validate_connection(connection))
+                    connections.append(self.validate_connection(connection,
+                                                                hubs, i))
                     valid_connections.add(tuple(sorted((name1, name2))))
                 else:
                     raise ValueError(f"line {i}: invalid format '{line}'")
@@ -230,10 +232,10 @@ class Parse:
             values.update({"zones": hubs})
             values.update({"connections": connections})
             self.validate_start_end(start_hub, end_hub)
-            print(values)
+            return values
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
+        except PermissionError:
+            print("Error: permission denied")
         except ValueError as er:
             print(f"Error: {er}")
-
-
-p = Parse()
-p.parse_file()

@@ -1,15 +1,10 @@
 from collections import deque
 
 graph = {
-    'A': ['B', 'C'],
-    'B': ['A', 'D', 'E'],
-    'C': ['A', 'F'],
-    'D': ['B'],
-    'E': ['B', 'F'],
-    'F': ['C', 'E']
-}
-# Find shortest path from 1 to 5
-# Expected: 3 (path: 1 -> 2 -> 4 -> 5, or 1 -> 3 -> 4 -> 5)
+    'roof.1': ['start', 'waypoint2'],
+    'waypoint2': ['roof.1', 'goal'],
+    'start': ['roof.1'],
+    'goal': ['waypoint2']}
 
 
 def bfs(data, start, end):
@@ -34,4 +29,4 @@ def bfs(data, start, end):
     return visited
 
 
-print(bfs(graph, "A", "E"))
+print(bfs(graph, "start", "end"))
