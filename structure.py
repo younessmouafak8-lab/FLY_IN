@@ -1,8 +1,15 @@
+from bfs import bfs
+
+
 class Graph:
-    def __init__(self, num_drones, start_zone, end_zone, zones: dict, connections):
+    def __init__(self, num_drones, start_zone, end_zone, zones: dict,
+                 connections):
         self.num_drones = num_drones
+        self.start_zone = start_zone
+        self.end_zone = end_zone
         self.zones = zones
         self.connections = connections
+        self.graph = {}
 
     def build_list(self):
         lst = {}
@@ -16,7 +23,7 @@ class Graph:
 
             lst.update({zone: tmp})
 
-        print(lst)
+        print(bfs(lst, self.start_zone, self.end_zone))
 
 
 class Zone:
@@ -27,6 +34,21 @@ class Zone:
         self.type = type
         self.max_drones = max_drones
         self.color = color
+
+    def get_cost(self):
+        cost = 0
+        if self.type == "normal" or self.type == "priority":
+            cost = 1
+
+        if self.type == "restricted":
+            cost = 2
+
+        return cost
+
+    def is_priority(self):
+        if self.type == "priority":
+            return 1
+        return 0
 
 
 class Connection:
