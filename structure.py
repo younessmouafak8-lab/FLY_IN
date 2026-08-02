@@ -12,7 +12,6 @@ class Graph:
         self.graph = {}
 
     def build_list(self):
-        lst = {}
         for zone in self.zones.values():
             tmp = []
             for con in self.connections:
@@ -21,9 +20,10 @@ class Graph:
                 if zone.name == con.zone2.name:
                     tmp.append(self.zones[con.zone1.name])
 
-            lst.update({zone: tmp})
+            self.graph.update({zone: tmp})
 
-        print(bfs(lst, self.start_zone, self.end_zone))
+    def get_path(self):
+        return bfs(self.graph, self.start_zone, self.end_zone)
 
 
 class Zone:
@@ -47,8 +47,8 @@ class Zone:
 
     def is_priority(self):
         if self.type == "priority":
-            return 1
-        return 0
+            return 0
+        return 1
 
 
 class Connection:
@@ -57,3 +57,11 @@ class Connection:
         self.zone2 = zone2
         self.cost = 0
         self.max_link_capacity = max_link_capacity
+
+
+class Drone:
+    def __init__(self, id, path):
+        self.id = id
+        self.path = path
+        self.i = 0
+        self.done = False
