@@ -8,17 +8,14 @@ def main():
     data = p.parse_file()
     if not data:
         return
-    # print(data)
     zones = data["zones"]
     connections = data["connections"]
-    # print(zones)
-    # print(connections)
     graph = Graph(data["nb_drones"], data["start_zone"], data["end_zone"],
                   zones, connections)
     graph.build_list()
     path = graph.get_path()
-    print(path)
-    sim = Simulation()
+    # print(path)
+    sim = Simulation(connections, zones)
     for i in range(data["nb_drones"]):
         drone = Drone(i + 1, path)
         sim.drones.append(drone)

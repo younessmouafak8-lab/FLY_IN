@@ -15,7 +15,7 @@ def bfs(data, start, end):
             continue
         if current == end:
             while current:
-                path.append((current.name, cheapest[current]))
+                path.append((current, cheapest[current]))
                 current = parent[current]
             return path[::-1]
 

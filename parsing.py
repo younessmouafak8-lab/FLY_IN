@@ -152,7 +152,7 @@ class Parse:
         start_hub = None
         hubs = {}
         end_hub = None
-        connections = []
+        connections = {}
         valid_hubs = set()
         valid_connections = set()
         try:
@@ -220,10 +220,13 @@ class Parse:
                     if name2 not in valid_hubs:
                         raise ValueError(f"line {i}: unknown hub '{name2}' "
                                          "in connection field")
-                    if tuple(sorted((name1, name2))) in valid_connections:
+                    conn_name = tuple(sorted((name1, name2)))
+                    if conn_name in valid_connections:
                         raise ValueError(f"line {i}: duplicate connections!")
-                    connections.append(self.validate_connection(connection,
-                                                                hubs, i))
+
+                    connections.update({conn_name:
+                                        self.validate_connection(connection,
+                                                                 hubs, i)})
                     valid_connections.add(tuple(sorted((name1, name2))))
                 else:
                     raise ValueError(f"line {i}: invalid format '{line}'")

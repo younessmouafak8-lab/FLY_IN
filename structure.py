@@ -14,7 +14,7 @@ class Graph:
     def build_list(self):
         for zone in self.zones.values():
             tmp = []
-            for con in self.connections:
+            for con in self.connections.values():
                 if zone.name == con.zone1.name:
                     tmp.append(self.zones[con.zone2.name])
                 if zone.name == con.zone2.name:
@@ -65,3 +65,5 @@ class Drone:
         self.path = path
         self.i = 0
         self.done = False
+        self.in_connection = False
+        self.to_move = 0
