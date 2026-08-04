@@ -16,13 +16,14 @@ def bfs(data, start, end):
         if current == end:
             while current:
                 path.append((current, cheapest[current]))
+                current.usage += 0.01
                 current = parent[current]
             return path[::-1]
 
         for neighbor in data[current]:
             if neighbor.type == "blocked":
                 continue
-            cost = current_cost + neighbor.get_cost()
+            cost = current_cost + neighbor.get_cost() + neighbor.usage
             if neighbor not in cheapest:
                 cheapest[neighbor] = cost
                 heapq.heappush(queue, (cost, neighbor.is_priority(), i,

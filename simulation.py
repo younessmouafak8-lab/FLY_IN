@@ -69,20 +69,20 @@ class Simulation:
                     if not drone.to_move:
                         drone.in_connection = False
                         drone.i += 1
-                        print(f"drone{drone.id} reached {to_zone.name} on turn {self.turn + 1}")
+                        print(f"D{drone.id}-{to_zone.name} ", end="")
                     continue
 
                 if self.is_movable(from_zone, to_zone, drone):
                     if to_zone.type == "restricted":
                         drone.in_connection = True
-                        drone.to_move = 2
-                        print(f"drone{drone.id} departed towards {to_zone.name} on turn {self.turn + 1}")
+                        drone.to_move = 1
+                        print(f"D{drone.id}-{from_zone.name}-{to_zone.name} ", end="")
                     else:
                         drone.i += 1
-                        print(f"drone{drone.id} moved to {to_zone.name} on turn {self.turn + 1}")
+                        print(f"D{drone.id}-{to_zone.name} ", end="")
+            print()
 
             if self.check_drones():
                 self.all_done = True
 
             self.turn += 1
-        print(self.zones_usage)

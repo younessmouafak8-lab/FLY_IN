@@ -34,11 +34,15 @@ class Zone:
         self.type = type
         self.max_drones = max_drones
         self.color = color
+        self.usage = 0
 
     def get_cost(self):
         cost = 0
         if self.type == "normal" or self.type == "priority":
             cost = 1
+
+        # if self.type == "priority":
+        #     cost = 0.8
 
         if self.type == "restricted":
             cost = 2

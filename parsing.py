@@ -185,6 +185,7 @@ class Parse:
                                          f"are not tolerated '{start_hub[0]}'")
                     start_hub = self.validate_hub(start_hub, i)
                     valid_hubs.add(start_hub.name)
+                    start_hub.max_drones = n_drones
                     values.update({"start_zone": start_hub})
                     hubs.update({start_hub.name: start_hub})
 
@@ -205,6 +206,7 @@ class Parse:
                                          f"are not tolerated '{end_hub[0]}'")
                     end_hub = self.validate_hub(end_hub, i)
                     valid_hubs.add(end_hub.name)
+                    end_hub.max_drones = n_drones
                     values.update({"end_zone": end_hub})
                     hubs.update({end_hub.name: end_hub})
 

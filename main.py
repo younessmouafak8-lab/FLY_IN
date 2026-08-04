@@ -13,11 +13,9 @@ def main():
     graph = Graph(data["nb_drones"], data["start_zone"], data["end_zone"],
                   zones, connections)
     graph.build_list()
-    path = graph.get_path()
-    # print(path)
     sim = Simulation(connections, zones)
     for i in range(data["nb_drones"]):
-        drone = Drone(i + 1, path)
+        drone = Drone(i + 1, graph.get_path())
         sim.drones.append(drone)
     sim.simulate()
 
