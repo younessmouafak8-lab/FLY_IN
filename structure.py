@@ -1,5 +1,3 @@
-from bfs import bfs
-
 
 class Graph:
     def __init__(self, num_drones, start_zone, end_zone, zones: dict,
@@ -21,9 +19,6 @@ class Graph:
                     tmp.append(self.zones[con.zone1.name])
 
             self.graph.update({zone: tmp})
-
-    def get_path(self):
-        return bfs(self.graph, self.start_zone, self.end_zone)
 
 
 class Zone:

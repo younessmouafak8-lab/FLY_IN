@@ -53,7 +53,7 @@ class Parse:
     def get_connection(self, line):
         i, text = line
         pattern = (r"connection: ([\S]+)-([\S]+)"
-                   r"(?:\s+\[max_link_capacity=([\-\+]?\d+)\])?(?:\s*#.*)?$")
+                   r"(?:\s+\[max_link_capacity=([\-\+]?\d+)\])?(?:\s*#.*)?\s?$")
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid connection field '{text}'")

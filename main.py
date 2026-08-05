@@ -1,6 +1,7 @@
 from parsing import Parse
 from structure import Graph, Drone
 from simulation import Simulation
+from algo import Algo
 
 
 def main():
@@ -10,13 +11,35 @@ def main():
         return
     zones = data["zones"]
     connections = data["connections"]
+
     graph = Graph(data["nb_drones"], data["start_zone"], data["end_zone"],
                   zones, connections)
-    graph.build_list()
     sim = Simulation(connections, zones)
-    for i in range(data["nb_drones"]):
-        drone = Drone(i + 1, graph.get_path())
-        sim.drones.append(drone)
+
+    graph.build_list()
+
+    algo = Algo(graph.graph, data["start_zone"], data["end_zone"], zones,
+                connections)
+    paths = algo.get_paths()
+
+    i = 0
+    while i < data["nb_drones"]:
+
+        if all([not p[0] for p in paths]):
+            for j, p in enumerate(paths):
+                paths[j] = (paths[j][1], paths[j][1], paths[j][2])
+
+        for j, p in enumerate(paths):
+            if not p[0]:
+                continue
+
+            paths[j] = (paths[j][0] - 1, paths[j][1], paths[j][2])
+
+            drone = Drone(i + 1, p[2])
+            sim.drones.append(drone)
+            break
+
+        i += 1
     sim.simulate()
 
 

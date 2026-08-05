@@ -18,13 +18,13 @@ class Simulation:
         conection_usage = self.link_usage.get((key, self.turn + 1), 0)
 
         if zone_to.type == "restricted":
-            conection_usage2 = self.link_usage.get((key, self.turn + 2), 0)
-            zone_usage = self.zones_usage.get((zone_to.name, self.turn + 2), 0)
-            if conection_usage >= connection.max_link_capacity or\
-                    conection_usage2 >= connection.max_link_capacity:
+            zone_usage = self.zones_usage.get((zone_to.name, self.turn + 1), 0)
+            zone_usage2 = self.zones_usage.get((zone_to.name, self.turn + 2), 0)
+            if conection_usage >= connection.max_link_capacity:
                 flag = False
 
-            if zone_usage >= zone_to.max_drones:
+            if zone_usage >= zone_to.max_drones or \
+                    zone_usage2 >= zone_to.max_drones:
                 flag = False
 
             if not flag:
@@ -32,9 +32,9 @@ class Simulation:
                                                    self.turn + 1), 0)
                 self.zones_usage[(zone_from.name, self.turn + 1)] = from_zone_usage + 1
             else:
-                self.zones_usage[(zone_to.name, self.turn + 2)] = zone_usage + 1
+                self.zones_usage[(zone_to.name, self.turn + 1)] = zone_usage + 1
+                self.zones_usage[(zone_to.name, self.turn + 2)] = zone_usage2 + 1
                 self.link_usage[(key, self.turn + 1)] = conection_usage + 1
-                self.link_usage[(key, self.turn + 2)] = conection_usage2 + 1
 
         else:
             zone_usage = self.zones_usage.get((zone_to.name, self.turn + 1), 0)
@@ -61,8 +61,8 @@ class Simulation:
                 if drone.i >= len(drone.path) - 1:
                     drone.done = True
                     continue
-                from_zone, cost = drone.path[drone.i]
-                to_zone, cost = drone.path[drone.i + 1]
+                from_zone = drone.path[drone.i]
+                to_zone = drone.path[drone.i + 1]
 
                 if drone.in_connection:
                     drone.to_move -= 1
