@@ -24,8 +24,9 @@ class Parse:
     def get_start(self, line):
         i, text = line
         pattern = (r"start_hub: ([^\-]+)\s+([\-\+]?\d+)\s+([\-\+]?\d+)"
-                   r"(?:\s+\[(\w+=\w+)(?:\s+(\w+=\w+))?(?:\s+(\w+=\w+))?\])?"
-                   r"(?:\s*#.*)?$")
+                   r"(?:\s+\[(\w+=[\w\-\+]+)(?:\s+(\w+=[\w\-\+]+))?"
+                   r"(?:\s+(\w+=[\w\-\+]+))?\])?"
+                   r"\s*(?:#.*)?$")
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid start hub field {text}")
@@ -34,8 +35,9 @@ class Parse:
     def get_hubs(self, line):
         i, text = line
         pattern = (r"hub: ([^\-]+)\s+([\-\+]?\d+)\s+([\-\+]?\d+)"
-                   r"(?:\s+\[(\w+=\w+)(?:\s+(\w+=\w+))?(?:\s+(\w+=\w+))?\])?"
-                   r"?\s*(?:#.*)?$")
+                   r"(?:\s+\[(\w+=[\w\-\+]+)(?:\s+(\w+=[\w\-\+]+))?"
+                   r"(?:\s+(\w+=[\w\-\+]+))?\])?"
+                   r"\s*(?:#.*)?$")
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid hub field {text}")
@@ -44,8 +46,9 @@ class Parse:
     def get_end(self, line):
         i, text = line
         pattern = (r"end_hub: ([^\-]+)\s+([\-\+]?\d+)\s+([\-\+]?\d+)"
-                   r"(?:\s+\[(\w+=\w+)(?:\s+(\w+=\w+))?(?:\s+(\w+=\w+))?\])?"
-                   r"?\s*(?:#.*)?$")
+                   r"(?:\s+\[(\w+=[\w\-\+]+)(?:\s+(\w+=[\w\-\+]+))?"
+                   r"(?:\s+(\w+=[\w\-\+]+))?\])?"
+                   r"\s*(?:#.*)?$")
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid end hub field")
@@ -72,8 +75,6 @@ class Parse:
         if not connections:
             raise ValueError("You must provide connections!, connection:"
                              " <name1>-<name2> [metadata]")
-
-
 
     def verify_metadata(self, hub, i):
         allowed_names = ("color", "max_drones", "zone")
@@ -106,7 +107,7 @@ class Parse:
                         raise ValueError(f"line {i}: value for max_drones must"
                                          f" be a positive integer. {value}")
                 if key == "color":
-                    if not isinstance(value, str):
+                    if not isinstance(value, str) or not value.isalpha():
                         raise ValueError(f"line {i}: color must be a string")
                     if value != "rainbow":
                         try:

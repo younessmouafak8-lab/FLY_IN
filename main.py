@@ -21,6 +21,9 @@ def main():
     algo = Algo(graph.graph, data["start_zone"], data["end_zone"], zones,
                 connections)
     paths = algo.get_paths()
+    if not paths:
+        print("end is not connected to the start :(")
+        exit(1)
 
     i = 0
     while i < data["nb_drones"]:
@@ -43,4 +46,7 @@ def main():
     sim.simulate()
 
 
-main()
+try:
+    main()
+except Exception as e:
+    print(f"Error: {e}")

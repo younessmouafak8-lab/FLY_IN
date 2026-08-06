@@ -1,1 +1,7 @@
 nb_drones: 51
+
+start_hub: <name> 1 -22 [color=blue]  
+
+end_hub: <name2> -1 -22
+
+connection: <name>-<name2>

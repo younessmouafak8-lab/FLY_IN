@@ -47,6 +47,7 @@ class Algo:
                                                neighbor))
                         parent[neighbor] = current
                 i += 1
+        return None
 
     def get_path(self):
         return self.custom_dijkstra()
@@ -59,6 +60,8 @@ class Algo:
     def get_paths(self):
         paths = []
         path = self.get_path()
+        if not path:
+            return None
         while path not in paths:
             paths.append(path)
             path = self.get_path()

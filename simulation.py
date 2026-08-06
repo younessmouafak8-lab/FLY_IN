@@ -1,7 +1,6 @@
 from rich import print as my_print
 
 
-
 class Simulation:
     def __init__(self, connections, zones):
         self.drones = []
