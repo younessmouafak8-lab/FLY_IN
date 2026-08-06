@@ -51,10 +51,9 @@ class Algo:
     def get_path(self):
         return self.custom_dijkstra()
 
-    def get_con_cost(self, connections, p):
-        return connections[tuple(sorted((p[0].name, p[1].name)))].max_link_capacity
-
-    def get_max(self, cnx, p):
+    def get_max(self, connections, p):
+        key = tuple(sorted((p[0].name, p[1].name)))
+        cnx = connections[key].max_link_capacity
         return cnx if cnx < p[1].max_drones else p[1].max_drones
 
     def get_paths(self):
@@ -63,7 +62,7 @@ class Algo:
         while path not in paths:
             paths.append(path)
             path = self.get_path()
-        paths = [(self.get_max(self.get_con_cost(self.connections, p), p),
-                 self.get_max(self.get_con_cost(self.connections, p), p), p)
+        paths = [(self.get_max(self.connections, p),
+                 self.get_max(self.connections, p), p)
                  for p in paths]
         return paths

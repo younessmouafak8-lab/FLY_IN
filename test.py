@@ -1,7 +1,3 @@
+from rich import print as rprint
 
-person = {
-    "name": "Alice",
-    "age": 30
-}
-
-print(**person)
+rprint("hello: [red]this text is red[/red]")
