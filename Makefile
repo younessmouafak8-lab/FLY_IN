@@ -1,8 +1,7 @@
 install:
-	pip install -r requirements.txt --break-system-packages
  
 run:
-	@python3 main.py
+	@python3 main.py config.txt
  
 debug:
 	python3 -m pdb main.py

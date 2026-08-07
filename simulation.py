@@ -1,20 +1,44 @@
+from structure import Drone
 from rich import print as my_print
 
 
 class Simulation:
-    def __init__(self, connections, zones):
-        self.drones = []
+    def __init__(self, nb_drones, connections, zones, paths):
+        self.nb_drones = nb_drones
         self.connections = connections
         self.zones = zones
+        self.paths = paths
+        self.drones = []
         self.zones_usage = {}
         self.link_usage = {}
         self.all_done = False
         self.turn = 0
 
+    def distribute_paths(self):
+        i = 0
+        while i < self.nb_drones:
+
+            if all([not p[0] for p in self.paths]):
+                for j, p in enumerate(self.paths):
+                    self.paths[j] = (self.paths[j][1], self.paths[j][1],
+                                     self.paths[j][2])
+
+            for j, p in enumerate(self.paths):
+                if not p[0]:
+                    continue
+
+                self.paths[j] = (self.paths[j][0] - 1, self.paths[j][1],
+                                 self.paths[j][2])
+
+                drone = Drone(i + 1, p[2])
+                self.drones.append(drone)
+                break
+            i += 1
+
     def check_drones(self):
         return all([drone.done for drone in self.drones])
 
-    def is_movable(self, zone_from, zone_to, drone):
+    def is_movable(self, zone_from, zone_to):
         flag = True
         key = tuple(sorted((zone_from.name, zone_to.name)))
         connection = self.connections[key]
@@ -94,7 +118,7 @@ class Simulation:
                         my_print(f"D{drone.id}-{to_zone_name}", end=" ")
                     continue
 
-                if self.is_movable(from_zone, to_zone, drone):
+                if self.is_movable(from_zone, to_zone):
                     to_zone_name = self.get_name_color(to_zone)
                     from_zone_name = self.get_name_color(from_zone)
                     if to_zone.type == "restricted":

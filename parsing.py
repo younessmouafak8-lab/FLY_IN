@@ -5,6 +5,12 @@ import webcolors
 
 
 class Parse:
+    def __init__(self):
+        self.nb_drones = {}
+        self.start_zone = {}
+        self.end_zone = {}
+        self.zones = {}
+        self.connections = {}
 
     def is_skippable(self, line):
         pattern = r"^\s*(#.*)?$"
@@ -154,19 +160,16 @@ class Parse:
 
     def parse_file(self):
         if len(sys.argv) != 2:
-            raise ValueError("The config file is required")
+            raise ValueError("Ensure the config file is there")
         file = sys.argv[1]
         with open(file, mode="r") as f:
             data = f.readlines()
         lines = []
         for i, line in enumerate(data):
             lines.append((i + 1, line))
-        values = {}
         n_drones = None
         start_hub = None
-        hubs = {}
         end_hub = None
-        connections = {}
         valid_hubs = set()
         valid_connections = set()
         valid_coordinates = set()
@@ -186,7 +189,7 @@ class Parse:
                     if n_drones <= 0:
                         raise ValueError(f"line {i}: the number of drones must"
                                          " be a positive integer")
-                    values.update({"nb_drones": int(n_drones)})
+                    self.nb_drones = int(n_drones)
                 elif not n_drones:
                     raise ValueError(f"line {i}: The first line must "
                                      "define the number of drones")
@@ -199,15 +202,15 @@ class Parse:
                     start_hub.max_drones = n_drones
                     self.validate_zones(start_hub, valid_hubs,
                                         valid_coordinates, i)
-                    values.update({"start_zone": start_hub})
-                    hubs.update({start_hub.name: start_hub})
+                    self.start_zone = start_hub
+                    self.zones.update({start_hub.name: start_hub})
 
                 elif line.startswith("hub"):
                     hub = self.get_hubs(row)
                     hub = self.validate_hub(hub, i)
                     self.validate_zones(hub, valid_hubs,
                                         valid_coordinates, i)
-                    hubs.update({hub.name: hub})
+                    self.zones.update({hub.name: hub})
 
                 elif line.startswith("end_hub"):
                     if end_hub:
@@ -217,8 +220,8 @@ class Parse:
                     self.validate_zones(end_hub, valid_hubs,
                                         valid_coordinates, i)
                     end_hub.max_drones = n_drones
-                    values.update({"end_zone": end_hub})
-                    hubs.update({end_hub.name: end_hub})
+                    self.end_zone = end_hub
+                    self.zones.update({end_hub.name: end_hub})
 
                 elif line.startswith("connection"):
                     connection = self.get_connection(row)
@@ -236,21 +239,21 @@ class Parse:
                     if conn_name in valid_connections:
                         raise ValueError(f"line {i}: duplicate connections!")
 
-                    connections.update({conn_name:
-                                        self.validate_connection(connection,
-                                                                 hubs, i)})
+                    self.connections.update({
+                        conn_name: self.validate_connection(connection,
+                                                            self.zones, i)})
                     valid_connections.add(tuple(sorted((name1, name2))))
                 else:
                     raise ValueError(f"line {i}: invalid format '{line}'")
 
-            self.is_there(n_drones, start_hub, end_hub, connections)
-            values.update({"zones": hubs})
-            values.update({"connections": connections})
+            self.is_there(n_drones, start_hub, end_hub, self.connections)
             self.validate_start_end(start_hub, end_hub)
-            return values
         except FileNotFoundError as e:
             print(f"Error: {e}")
+            exit(1)
         except PermissionError:
             print("Error: permission denied")
+            exit(1)
         except ValueError as er:
             print(f"Error: {er}")
+            exit(1)

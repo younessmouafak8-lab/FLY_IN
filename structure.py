@@ -30,14 +30,12 @@ class Zone:
         self.max_drones = max_drones
         self.color = color
         self.usage = 0
+        self.drones = 0
 
     def get_cost(self):
         cost = 0
         if self.type == "normal" or self.type == "priority":
             cost = 1
-
-        # if self.type == "priority":
-        #     cost = 0.8
 
         if self.type == "restricted":
             cost = 2
@@ -56,6 +54,7 @@ class Connection:
         self.zone2 = zone2
         self.cost = 0
         self.max_link_capacity = max_link_capacity
+        self.drones = 0
 
 
 class Drone:

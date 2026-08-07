@@ -1,52 +1,39 @@
 from parsing import Parse
-from structure import Graph, Drone
+from structure import Graph
 from simulation import Simulation
 from algo import Algo
 
 
-def main():
-    p = Parse()
-    data = p.parse_file()
-    if not data:
-        return
-    zones = data["zones"]
-    connections = data["connections"]
+class Main:
+    def __init__(self):
+        self.parser = Parse()
+        self.graph = None
+        self.sim = None
+        self.algo = None
 
-    graph = Graph(data["nb_drones"], data["start_zone"], data["end_zone"],
-                  zones, connections)
-    sim = Simulation(connections, zones)
+    def run(self):
+        self.parser.parse_file()
 
-    graph.build_list()
+        self.graph = Graph(self.parser.nb_drones, self.parser.start_zone,
+                           self.parser.end_zone, self.parser.zones,
+                           self.parser.connections)
 
-    algo = Algo(graph.graph, data["start_zone"], data["end_zone"], zones,
-                connections)
-    paths = algo.get_paths()
-    if not paths:
-        print("end is not connected to the start :(")
-        exit(1)
+        self.graph.build_list()
 
-    i = 0
-    while i < data["nb_drones"]:
+        algo = Algo(self.graph.graph, self.parser.start_zone,
+                    self.parser.end_zone, self.parser.zones,
+                    self.parser.connections)
+        paths = algo.get_paths()
+        if not paths:
+            print("end is not connected to the start :(")
+            exit(1)
 
-        if all([not p[0] for p in paths]):
-            for j, p in enumerate(paths):
-                paths[j] = (paths[j][1], paths[j][1], paths[j][2])
+        self.sim = Simulation(self.parser.nb_drones, self.parser.connections,
+                              self.parser.zones, paths)
 
-        for j, p in enumerate(paths):
-            if not p[0]:
-                continue
-
-            paths[j] = (paths[j][0] - 1, paths[j][1], paths[j][2])
-
-            drone = Drone(i + 1, p[2])
-            sim.drones.append(drone)
-            break
-
-        i += 1
-    sim.simulate()
+        self.sim.distribute_paths()
+        self.sim.simulate()
 
 
-try:
-    main()
-except Exception as e:
-    print(f"Error: {e}")
+main = Main()
+main.run()
