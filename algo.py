@@ -57,7 +57,7 @@ class Algo:
     def get_path(self) -> Optional[List[Zone]]:
         return self.custom_dijkstra()
 
-    def get_max(self, connections: Dict[Tuple, Connection], p: Tuple):
+    def get_max(self, connections: Dict[Tuple, Connection], p: Tuple) -> int:
         key = tuple(sorted((p[0].name, p[1].name)))
         cnx = connections[key].max_link_capacity
         return cnx if cnx < p[1].max_drones else p[1].max_drones

@@ -1,9 +1,8 @@
 import sys
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple
-
 from structure import Zone, Connection
-import webcolors  # type: ignore
+import webcolors
 
 
 class Parse:
@@ -128,7 +127,7 @@ class Parse:
                     data.update({key: value})
         return data
 
-    def validate_hub(self, hub, i):
+    def validate_hub(self, hub: Tuple, i: int) -> Zone:
         values = {"name": hub[0],
                   "coordinates": (int(hub[1]), int(hub[2]))}
         values.update(self.verify_metadata(hub, i))
