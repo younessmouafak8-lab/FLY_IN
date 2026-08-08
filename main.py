@@ -2,26 +2,29 @@ from parsing import Parse
 from structure import Graph
 from simulation import Simulation
 from algo import Algo
+from typing import Optional
 
 
 class Main:
-    def __init__(self):
+    def __init__(self) -> None:
         self.parser = Parse()
-        self.graph = None
-        self.sim = None
-        self.algo = None
+        self.graph: Optional[Graph] = None
+        self.sim: Optional[Simulation] = None
+        self.algo: Optional[Algo] = None
 
-    def run(self):
+    def run(self) -> None:
         self.parser.parse_file()
+        start_zone = self.parser.start_zone
+        end_zone = self.parser.end_zone
 
-        self.graph = Graph(self.parser.nb_drones, self.parser.start_zone,
-                           self.parser.end_zone, self.parser.zones,
+        self.graph = Graph(self.parser.nb_drones, start_zone,
+                           end_zone, self.parser.zones,
                            self.parser.connections)
 
         self.graph.build_list()
 
-        algo = Algo(self.graph.graph, self.parser.start_zone,
-                    self.parser.end_zone, self.parser.zones,
+        algo = Algo(self.graph.graph, start_zone,
+                    end_zone, self.parser.zones,
                     self.parser.connections)
         paths = algo.get_paths()
         if not paths:

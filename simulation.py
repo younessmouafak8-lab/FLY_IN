@@ -1,20 +1,25 @@
-from structure import Drone
+from typing import Dict, List, Tuple
+
+from structure import Connection, Drone, Zone
 from rich import print as my_print
 
 
 class Simulation:
-    def __init__(self, nb_drones, connections, zones, paths):
+    def __init__(self, nb_drones: int,
+                 connections: Dict[Tuple, Connection],
+                 zones: Dict[str, Zone],
+                 paths: List[Tuple[int, int, List[Zone]]]) -> None:
         self.nb_drones = nb_drones
         self.connections = connections
         self.zones = zones
         self.paths = paths
-        self.drones = []
-        self.zones_usage = {}
-        self.link_usage = {}
+        self.drones: List[Drone] = []
+        self.zones_usage: Dict[Tuple[str, int], int] = {}
+        self.link_usage: Dict[Tuple[Tuple, int], int] = {}
         self.all_done = False
         self.turn = 0
 
-    def distribute_paths(self):
+    def distribute_paths(self) -> None:
         i = 0
         while i < self.nb_drones:
 
@@ -35,17 +40,18 @@ class Simulation:
                 break
             i += 1
 
-    def check_drones(self):
+    def check_drones(self) -> bool:
         return all([drone.done for drone in self.drones])
 
-    def is_movable(self, zone_from, zone_to):
+    def is_movable(self, zone_from: Zone, zone_to: Zone) -> bool:
         flag = True
         key = tuple(sorted((zone_from.name, zone_to.name)))
         connection = self.connections[key]
         conection_usage = self.link_usage.get((key, self.turn + 1), 0)
 
         if zone_to.type == "restricted":
-            zone_usage = self.zones_usage.get((zone_to.name, self.turn + 1), 0)
+            zone_usage = self.zones_usage.get((zone_to.name, self.turn + 1),
+                                              0)
             zone_usage2 = self.zones_usage.get((zone_to.name, self.turn + 2),
                                                0)
             if conection_usage >= connection.max_link_capacity:
@@ -68,7 +74,8 @@ class Simulation:
                 self.link_usage[(key, self.turn + 1)] = conection_usage + 1
 
         else:
-            zone_usage = self.zones_usage.get((zone_to.name, self.turn + 1), 0)
+            zone_usage = self.zones_usage.get((zone_to.name, self.turn + 1),
+                                              0)
             if conection_usage >= connection.max_link_capacity:
                 flag = False
 
@@ -87,7 +94,7 @@ class Simulation:
 
         return flag
 
-    def get_name_color(self, zone):
+    def get_name_color(self, zone: Zone) -> str:
         if zone.color == "rainbow":
             colors = ["red", "orange1", "yellow", "green", "cyan", "blue",
                       "magenta"]
@@ -99,7 +106,7 @@ class Simulation:
             colored_name = f"[{zone.color}]{zone.name}[/{zone.color}]"
         return colored_name
 
-    def simulate(self):
+    def simulate(self) -> None:
         while not self.all_done:
 
             for drone in self.drones:

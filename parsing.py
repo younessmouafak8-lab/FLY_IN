@@ -1,75 +1,80 @@
 import sys
 import re
+from typing import Any, Dict, List, Optional, Set, Tuple
+
 from structure import Zone, Connection
-import webcolors
+import webcolors  # type: ignore
 
 
 class Parse:
-    def __init__(self):
-        self.nb_drones = {}
-        self.start_zone = {}
-        self.end_zone = {}
-        self.zones = {}
-        self.connections = {}
+    def __init__(self) -> None:
+        self.nb_drones: int = 0
+        self.start_zone: Zone
+        self.end_zone: Zone
+        self.zones: Dict[str, Zone] = {}
+        self.connections: Dict[Tuple[str, str], Connection] = {}
 
-    def is_skippable(self, line):
+    def is_skippable(self, line: str) -> bool:
         pattern = r"^\s*(#.*)?$"
         result = re.match(pattern, line)
         if not result:
             return False
         return True
 
-    def drones_num(self, line: tuple):
+    def drones_num(self, line: Tuple[int, str]) -> str:
         i, text = line
-        pattern = r"^nb_drones: ([\-\+]?\d+)\s*(?:\s*#.*)?$"
+        pattern = r"nb_drones: ([\-\+]?\d+)\s*(?:\s*#.*)?$"
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid drones number field '{text}'")
         return result.group(1)
 
-    def get_start(self, line):
+    def get_start(self, line: Tuple[int, str]) -> Tuple[Optional[str], ...]:
         i, text = line
-        pattern = (r"start_hub: ([^\-]+)\s+([\-\+]?\d+)\s+([\-\+]?\d+)"
-                   r"(?:\s+\[(\w+=[\w\-\+]+)(?:\s+(\w+=[\w\-\+]+))?"
-                   r"(?:\s+(\w+=[\w\-\+]+))?\])?"
+        pattern = (r"start_hub: ([^\-\s]+)\s+([\-\+]?\d+)\s+([\-\+]?\d+)"
+                   r"(?:\s+\[(\w+=[\S]+)(?:\s+(\w+=[\S]+))?"
+                   r"(?:\s+(\w+=[\S]+))?\])?"
                    r"\s*(?:#.*)?$")
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid start hub field {text}")
         return (result.groups())
 
-    def get_hubs(self, line):
+    def get_hubs(self, line: Tuple[int, str]) -> Tuple[Optional[str], ...]:
         i, text = line
-        pattern = (r"hub: ([^\-]+)\s+([\-\+]?\d+)\s+([\-\+]?\d+)"
-                   r"(?:\s+\[(\w+=[\w\-\+]+)(?:\s+(\w+=[\w\-\+]+))?"
-                   r"(?:\s+(\w+=[\w\-\+]+))?\])?"
+        pattern = (r"hub: ([^\-\s]+)\s+([\-\+]?\d+)\s+([\-\+]?\d+)"
+                   r"(?:\s+\[(\w+=[\S]+)(?:\s+(\w+=[\S]+))?"
+                   r"(?:\s+(\w+=[\S]+))?\])?"
                    r"\s*(?:#.*)?$")
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid hub field {text}")
         return (result.groups())
 
-    def get_end(self, line):
+    def get_end(self, line: Tuple[int, str]) -> Tuple[Optional[str], ...]:
         i, text = line
-        pattern = (r"end_hub: ([^\-]+)\s+([\-\+]?\d+)\s+([\-\+]?\d+)"
-                   r"(?:\s+\[(\w+=[\w\-\+]+)(?:\s+(\w+=[\w\-\+]+))?"
-                   r"(?:\s+(\w+=[\w\-\+]+))?\])?"
+        pattern = (r"end_hub: ([^\-\s]+)\s+([\-\+]?\d+)\s+([\-\+]?\d+)"
+                   r"(?:\s+\[(\w+=[\S]+)(?:\s+(\w+=[\S]+))?"
+                   r"(?:\s+(\w+=[\S]+))?\])?"
                    r"\s*(?:#.*)?$")
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid end hub field")
         return (result.groups())
 
-    def get_connection(self, line):
+    def get_connection(self, line: Tuple[int, str]
+                       ) -> Tuple[Optional[str], ...]:
         i, text = line
-        pattern = (r"connection: ([\S]+)-([\S]+)"
+        pattern = (r"connection: ([^\-\s]+)-([^\-\s]+)"
                    r"(?:\s+\[max_link_capacity=([\-\+]?\d+)\])?\s*(?:#.*)?$")
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid connection field '{text}'")
         return (result.groups())
 
-    def is_there(self, nb, start, end, connections):
+    def is_there(self, nb: Optional[int], start: Optional[Any],
+                 end: Optional[Any],
+                 connections: Dict[Tuple[str, str], Connection]) -> None:
         if not nb:
             raise ValueError("You must provide the number of drones!\n")
         if not start:
@@ -82,16 +87,18 @@ class Parse:
             raise ValueError("You must provide connections!, connection:"
                              " <name1>-<name2> [metadata]")
 
-    def verify_metadata(self, hub, i):
+    def verify_metadata(self, hub: Tuple[Optional[str], ...],
+                        i: int) -> Dict[str, Any]:
         allowed_names = ("color", "max_drones", "zone")
         allowed_zones = ("normal", "blocked", "restricted", "priority")
-        temp = set()
-        data = {"type": "normal", "max_drones": 1, "color": "white"}
+        temp: Set[str] = set()
+        data: Dict[str, Any] = {"type": "normal", "max_drones": 1,
+                                "color": "white"}
         for name in hub[3:]:
             if name:
-                name = name.split("=")
-                key = name[0]
-                value = name[1]
+                parts = name.split("=")
+                key = parts[0]
+                value: Any = parts[1]
                 if key not in allowed_names:
                     raise ValueError(f"line {i}: invalid name '{key}'")
                 if key not in temp:
@@ -111,13 +118,10 @@ class Parse:
                         data.update({key: value})
                     except ValueError:
                         raise ValueError(f"line {i}: value for max_drones must"
-                                         f" be a positive integer. {value}")
+                                         f" be a positive integer. '{value}'")
                 if key == "color":
-                    if not isinstance(value, str) or not value.isalpha():
-                        raise ValueError(f"line {i}: color must be a string")
                     if value != "rainbow":
                         try:
-
                             value = webcolors.name_to_hex(value)
                         except ValueError:
                             value = webcolors.name_to_hex("white")
@@ -130,8 +134,10 @@ class Parse:
         values.update(self.verify_metadata(hub, i))
         return Zone(**values)
 
-    def validate_connection(self, connection, hubs, i):
-        con = {"zone1": hubs[connection[0]], "zone2": hubs[connection[1]]}
+    def validate_connection(self, connection: Tuple[Optional[str], ...],
+                            hubs: Dict[str, Zone], i: int) -> Connection:
+        con: Dict[str, Any] = {"zone1": hubs[connection[0]],  # type: ignore
+                               "zone2": hubs[connection[1]]}  # type: ignore
         val = {"max_link_capacity": 1}
         if connection[2]:
             num = int(connection[2])
@@ -142,7 +148,9 @@ class Parse:
         con.update(val)
         return Connection(**con)
 
-    def validate_zones(self, zone, valid_zones, valid_coordinates, i):
+    def validate_zones(self, zone: Zone, valid_zones: Set[str],
+                       valid_coordinates: Set[Tuple[int, int]],
+                       i: int) -> None:
         if zone.name in valid_zones:
             raise ValueError(f"line {i}: duplicate zone names are "
                              f"not tolerated '{zone.name}'")
@@ -152,27 +160,28 @@ class Parse:
                              "coordinates")
         valid_coordinates.add(zone.coordinates)
 
-    def validate_start_end(self, start, end):
+    def validate_start_end(self, start: Zone, end: Zone) -> None:
         if start.type == 'blocked':
             raise ValueError("start zone cant be blocked")
         if end.type == 'blocked':
             raise ValueError("end zone cant be blocked")
 
-    def parse_file(self):
+    def parse_file(self) -> None:
         if len(sys.argv) != 2:
             raise ValueError("Ensure the config file is there")
         file = sys.argv[1]
         with open(file, mode="r") as f:
             data = f.readlines()
-        lines = []
+        lines: List[Tuple[int, str]] = []
         for i, line in enumerate(data):
-            lines.append((i + 1, line))
-        n_drones = None
-        start_hub = None
-        end_hub = None
-        valid_hubs = set()
-        valid_connections = set()
-        valid_coordinates = set()
+            lines.append((i + 1, line.strip()))
+        n_drones: Optional[int] = None
+        start_hub: Optional[Zone] = None
+        end_hub: Optional[Zone] = None
+        valid_hubs: Set[str] = set()
+        valid_connections: Set[Tuple[str, str]] = set()
+        valid_coordinates: Set[Tuple[int, int]] = set()
+        conn_name: Tuple = tuple()
         try:
             for row in lines:
                 i, line = row
@@ -184,8 +193,8 @@ class Parse:
                     if n_drones:
                         raise ValueError(f"line {i}: duplicated "
                                          "number of drones fild")
-                    n_drones = self.drones_num(row)
-                    n_drones = int(n_drones)
+                    n_drones_str = self.drones_num(row)
+                    n_drones = int(n_drones_str)
                     if n_drones <= 0:
                         raise ValueError(f"line {i}: the number of drones must"
                                          " be a positive integer")
@@ -197,8 +206,8 @@ class Parse:
                 elif line.startswith("start_hub"):
                     if start_hub:
                         raise ValueError(f"line {i}: duplicate start zones")
-                    start_hub = self.get_start(row)
-                    start_hub = self.validate_hub(start_hub, i)
+                    start_hub_fields = self.get_start(row)
+                    start_hub = self.validate_hub(start_hub_fields, i)
                     start_hub.max_drones = n_drones
                     self.validate_zones(start_hub, valid_hubs,
                                         valid_coordinates, i)
@@ -206,8 +215,8 @@ class Parse:
                     self.zones.update({start_hub.name: start_hub})
 
                 elif line.startswith("hub"):
-                    hub = self.get_hubs(row)
-                    hub = self.validate_hub(hub, i)
+                    hub_fields = self.get_hubs(row)
+                    hub = self.validate_hub(hub_fields, i)
                     self.validate_zones(hub, valid_hubs,
                                         valid_coordinates, i)
                     self.zones.update({hub.name: hub})
@@ -215,8 +224,8 @@ class Parse:
                 elif line.startswith("end_hub"):
                     if end_hub:
                         raise ValueError(f"line {i}: duplicated end zones")
-                    end_hub = self.get_end(row)
-                    end_hub = self.validate_hub(end_hub, i)
+                    end_hub_fields = self.get_end(row)
+                    end_hub = self.validate_hub(end_hub_fields, i)
                     self.validate_zones(end_hub, valid_hubs,
                                         valid_coordinates, i)
                     end_hub.max_drones = n_drones
@@ -242,12 +251,12 @@ class Parse:
                     self.connections.update({
                         conn_name: self.validate_connection(connection,
                                                             self.zones, i)})
-                    valid_connections.add(tuple(sorted((name1, name2))))
+                    valid_connections.add(conn_name)
                 else:
                     raise ValueError(f"line {i}: invalid format '{line}'")
 
             self.is_there(n_drones, start_hub, end_hub, self.connections)
-            self.validate_start_end(start_hub, end_hub)
+            self.validate_start_end(start_hub, end_hub)  # type: ignore
         except FileNotFoundError as e:
             print(f"Error: {e}")
             exit(1)
