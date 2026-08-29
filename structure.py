@@ -167,8 +167,6 @@ class Drone:
         done: Whether this drone has reached the end of its path.
         in_connection: Whether the drone is currently mid-transit
             through a multi-turn (restricted) connection.
-        to_move: The number of remaining turns before the drone
-            completes its current in-transit move.
     """
 
     def __init__(self, id: int,
@@ -185,4 +183,3 @@ class Drone:
         self.i: int = 0
         self.done: bool = False
         self.in_connection: bool = False
-        self.to_move: int = 0

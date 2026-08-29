@@ -67,20 +67,19 @@ class Simulation:
         i = 0
         while i < self.nb_drones:
 
-            if all([not p[0] for p in self.paths]):
+            if all(not p[0] for j, p in enumerate(self.paths)):
                 for j, p in enumerate(self.paths):
-                    self.paths[j] = (self.paths[j][1], self.paths[j][1],
-                                     self.paths[j][2])
+                    self.paths[j] = (self.paths[j][1],
+                                     self.paths[j][1], self.paths[j][2])
 
             for j, p in enumerate(self.paths):
                 if not p[0]:
                     continue
 
-                self.paths[j] = (self.paths[j][0] - 1, self.paths[j][1],
-                                 self.paths[j][2])
+                self.paths[j] = (self.paths[j][0] - 1,
+                                 self.paths[j][1], self.paths[j][2])
 
-                drone = Drone(i + 1, p[2])
-                self.drones.append(drone)
+                self.drones.append(Drone(i + 1, self.paths[j][2]))
                 break
             i += 1
 
@@ -206,12 +205,10 @@ class Simulation:
                 to_zone = drone.path[drone.i + 1]
 
                 if drone.in_connection:
-                    drone.to_move -= 1
-                    if not drone.to_move:
-                        drone.in_connection = False
-                        drone.i += 1
-                        to_zone_name = self.get_name_color(to_zone)
-                        my_print(f"D{drone.id}-{to_zone_name}", end=" ")
+                    drone.in_connection = False
+                    drone.i += 1
+                    to_zone_name = self.get_name_color(to_zone)
+                    my_print(f"D{drone.id}-{to_zone_name}", end=" ")
                     continue
 
                 if self.is_movable(from_zone, to_zone):
@@ -219,7 +216,6 @@ class Simulation:
                     from_zone_name = self.get_name_color(from_zone)
                     if to_zone.type == "restricted":
                         drone.in_connection = True
-                        drone.to_move = 1
                         my_print(f"D{drone.id}-{from_zone_name}-"
                                  f"{to_zone_name}", end=" ")
                     else:
