@@ -29,21 +29,6 @@ class Parse:
         self.zones: Dict[str, Zone] = {}
         self.connections: Dict[Tuple[str, str], Connection] = {}
 
-    def is_skippable(self, line: str) -> bool:
-        """Checks whether a line is blank or a comment.
-
-        Args:
-            line: The stripped text of a single line from the map file.
-
-        Returns:
-            True if the line is empty or comment-only, False otherwise.
-        """
-        pattern = r"^\s*(#.*)?$"
-        result = re.match(pattern, line)
-        if not result:
-            return False
-        return True
-
     def drones_num(self, line: Tuple[int, str]) -> str:
         """Extracts the drone count from an ``nb_drones`` line.
 
@@ -86,7 +71,7 @@ class Parse:
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid start hub field {text}")
-        return (result.groups())
+        return result.groups()
 
     def get_hubs(self, line: Tuple[int, str]) -> Tuple[Optional[str], ...]:
         """Parses a regular ``hub`` line into its raw field groups.
@@ -109,7 +94,7 @@ class Parse:
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid hub field {text}")
-        return (result.groups())
+        return result.groups()
 
     def get_end(self, line: Tuple[int, str]) -> Tuple[Optional[str], ...]:
         """Parses an ``end_hub`` line into its raw field groups.
@@ -132,7 +117,7 @@ class Parse:
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid end hub field")
-        return (result.groups())
+        return result.groups()
 
     def get_connection(self, line: Tuple[int, str]
                        ) -> Tuple[Optional[str], ...]:
@@ -155,7 +140,7 @@ class Parse:
         result = re.match(pattern, text)
         if not result:
             raise ValueError(f"line {i}: invalid connection field '{text}'")
-        return (result.groups())
+        return result.groups()
 
     def is_there(self, nb: Optional[int], start: Optional[Any],
                  end: Optional[Any],
@@ -263,8 +248,8 @@ class Parse:
         values.update(self.verify_metadata(hub, i))
         return Zone(**values)
 
-    def validate_connection(self, connection: Tuple[Optional[str], ...],
-                            hubs: Dict[str, Zone], i: int) -> Connection:
+    def validate_connection(self, connection: Tuple,
+                            hubs: Dict, i: int) -> Connection:
         """Builds a Connection object from a connection line's fields.
 
         Args:
@@ -282,8 +267,8 @@ class Parse:
             ValueError: If max_link_capacity is present but not a
                 positive integer.
         """
-        con: Dict[str, Any] = {"zone1": hubs[connection[0]],  # type: ignore
-                               "zone2": hubs[connection[1]]}  # type: ignore
+        con: Dict = {"zone1": hubs[connection[0]],
+                     "zone2": hubs[connection[1]]}
         val = {"max_link_capacity": 1}
         if connection[2]:
             num = int(connection[2])
@@ -374,7 +359,7 @@ class Parse:
         for row in lines:
             i, line = row
 
-            if self.is_skippable(line):
+            if not line:
                 continue
 
             elif line.startswith("nb_drones"):
@@ -444,4 +429,4 @@ class Parse:
                 raise ValueError(f"line {i}: invalid format '{line}'")
 
         self.is_there(n_drones, start_hub, end_hub, self.connections)
-        self.validate_start_end(start_hub, end_hub)  # type: ignore
+        self.validate_start_end(self.start_zone, self.end_zone)

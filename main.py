@@ -58,9 +58,10 @@ class Main:
         self.sim.simulate()
 
 
-main = Main()
-try:
-    main.run()
-except Exception as err:
-    print(f"Error: {err}")
-    exit(1)
+if __name__ == "__main__":
+    main = Main()
+    try:
+        main.run()
+    except Exception as err:
+        print(f"Error: {err}")
+        exit(1)
