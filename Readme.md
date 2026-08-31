@@ -166,3 +166,4 @@ single drone at a time.
 
 ### AI usage
 - explanation of the custom Dijkstra algo
+- fixing type hints

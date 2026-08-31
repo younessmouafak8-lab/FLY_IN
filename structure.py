@@ -40,7 +40,6 @@ class Zone:
         self.max_drones = max_drones
         self.color = color
         self.usage: float = 0
-        self.drones: int = 0
 
     def get_cost(self) -> int:
         """Returns the turn cost to move into this zone.
@@ -98,7 +97,6 @@ class Connection:
         self.zone2 = zone2
         self.cost: int = 0
         self.max_link_capacity = max_link_capacity
-        self.drones: int = 0
 
 
 class Graph:
